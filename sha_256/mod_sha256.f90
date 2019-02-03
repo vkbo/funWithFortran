@@ -1,6 +1,6 @@
 module mod_sha256
 
-  use, intrinsic :: iso_fortran_env, only : int32
+  use, intrinsic :: iso_fortran_env, only : int8, int32, int64
 
   implicit none
 
@@ -22,7 +22,9 @@ module mod_sha256
     transfer(z'748f82ee',int32),transfer(z'78a5636f',int32),transfer(z'84c87814',int32),transfer(z'8cc70208',int32), &
     transfer(z'90befffa',int32),transfer(z'a4506ceb',int32),transfer(z'bef9a3f7',int32),transfer(z'c67178f2',int32) /)
 
-  integer(kind=int32), private, save :: hh(8)
+  integer(kind=int32),              public,  save :: hh(8)
+  integer(kind=int32), allocatable, private, save :: wBuf(:)
+  integer(kind=int64),              private, save :: nBlock, nBuf
 
 contains
 
@@ -30,18 +32,50 @@ subroutine sha256_init(inWord)
 
   character(len=*), intent(in) :: inWord
 
-  write(*,"(a)") "SHA256> Init"
+  integer(kind=int64) :: wLen, wMod, wPad, i
 
-  write(*,"(a,z8.8)") "SHA256> ",kk(1)
-  write(*,"(a,z8.8)") "SHA256> ",kk(2)
-  write(*,"(a,z8.8)") "SHA256> ",kk(3)
-  write(*,"(a,z8.8)") "SHA256> ",kk(4)
+  ! Initialise hh()
+  hh(1) = transfer(z'6a09e667',int32)
+  hh(2) = transfer(z'bb67ae85',int32)
+  hh(3) = transfer(z'3c6ef372',int32)
+  hh(4) = transfer(z'a54ff53a',int32)
+  hh(5) = transfer(z'510e527f',int32)
+  hh(6) = transfer(z'9b05688c',int32)
+  hh(7) = transfer(z'1f83d9ab',int32)
+  hh(8) = transfer(z'5be0cd19',int32)
+
+  wLen = len(inWord)
+  wMod = mod(wLen+1,64)
+  if(wMod > 56) then
+    wPad = 120-wMod
+  else
+    wPad = 56-wMod
+  end if
+
+  nBlock = (wLen+wPad+9)/64
+  nBuf   = nBlock * 16
+  allocate(wBuf(nBuf))
+
+  wBuf(1:nBuf-2)    = transfer(inWord//char(128)//repeat(char(0),wPad),int32,nBuf-2)
+  wBuf(nBuf-1:nBuf) = transfer(wLen,int32,2)
+
+  ! write(*,"(a)")    "SHA256> Init"
+  ! write(*,"(a,i0)") "SHA256> Len = ",wLen
+  ! write(*,"(a,i0)") "SHA256> Mod = ",wMod
+  ! write(*,"(a,i0)") "SHA256> Pad = ",wPad
+  ! write(*,"(a,i0)") "SHA256> New = ",wLen+wPad+9
+  ! write(*,"(a,i0)") "SHA256> Blk = ",nBlock
 
   open(unit=77,file="test.bin",access="stream",status="replace")
-  write(77) kk(1:64)
+  write(77) wBuf
   close(77)
 
 end subroutine sha256_init
+
+subroutine sha256_digest(outWord)
+  character(len=64), intent(out) :: outWord
+  write(outWord,"(8(z8.8))") hh
+end subroutine sha256_digest
 
 ! (X AND Y) XOR ((NOT X) AND Z)
 pure integer function ch(x,y,z)

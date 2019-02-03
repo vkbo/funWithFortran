@@ -17,3 +17,8 @@ It has some operator overloading, and can be combined with standard Fortran char
 The implementation is similar to ISO_VARYING_STRING that was a proposed extension to Fortran 90, which had known flaws.
 It has worked well for what I've used it for, but it doesn't really give many benefits over plain allocatable character arrays.
 
+### SHA-256
+
+This is my current project.
+I already implemented MD5 hashing in a Fortran code by writing an interface to the ols c code by its original author.
+Reading up on the SHA-2 hash algorithm, I was wondering if I could do it natively in Fortran, so I decided to try with the 256 bit version.
