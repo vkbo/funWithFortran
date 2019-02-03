@@ -34,7 +34,7 @@ subroutine sha256_init(inWord)
 
   character(len=:), allocatable :: inWordP
   integer(kind=int64) :: wLen, wMod, wPad, i, c
-  integer(kind=int8)  :: fLen(8), fWord(4)
+  integer(kind=int8)  :: fWord(4)
 
   if(allocated(wBuf)) deallocate(wBuf)
 
@@ -62,7 +62,7 @@ subroutine sha256_init(inWord)
   ! Calculate padding needed until the message is
   !  (length+1)%512 = 448 bit
   wLen = len(inWord)
-  wMod = mod(wLen+1,64)
+  wMod = mod(wLen+1,64_int64)
   if(wMod > 56) then
     wPad = 120-wMod
   else
@@ -95,7 +95,7 @@ end subroutine sha256_init
 
 subroutine sha256_hash
 
-  integer             :: i,j
+  integer(kind=int64) :: i,j
   integer(kind=int32) :: h(8),t1,t2
   integer(kind=int32) :: w(64)
 
