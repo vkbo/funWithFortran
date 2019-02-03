@@ -32,7 +32,11 @@ subroutine sha256_init(inWord)
 
   character(len=*), intent(in) :: inWord
 
-  integer(kind=int64) :: wLen, wMod, wPad, i
+  character(len=:), allocatable :: inWordP
+  integer(kind=int64) :: wLen, wMod, wPad, i, c
+  integer(kind=int8)  :: fLen(8), fWord(4)
+
+  if(allocated(wBuf)) deallocate(wBuf)
 
   ! Initialise hh()
   hh(1) = transfer(z'6a09e667',int32)
@@ -56,21 +60,65 @@ subroutine sha256_init(inWord)
   nBuf   = nBlock * 16
   allocate(wBuf(nBuf))
 
-  wBuf(1:nBuf-2)    = transfer(inWord//char(128)//repeat(char(0),wPad),int32,nBuf-2)
-  wBuf(nBuf-1:nBuf) = transfer(wLen,int32,2)
+  inWordP = inWord//char(128)//repeat(char(0),wPad)
 
-  ! write(*,"(a)")    "SHA256> Init"
-  ! write(*,"(a,i0)") "SHA256> Len = ",wLen
-  ! write(*,"(a,i0)") "SHA256> Mod = ",wMod
-  ! write(*,"(a,i0)") "SHA256> Pad = ",wPad
-  ! write(*,"(a,i0)") "SHA256> New = ",wLen+wPad+9
-  ! write(*,"(a,i0)") "SHA256> Blk = ",nBlock
-
-  open(unit=77,file="test.bin",access="stream",status="replace")
-  write(77) wBuf
-  close(77)
+  ! Loop over all characters in the string in order 4,3,2,1,8,7,6,5,...
+  do i=1,nBuf-2
+    wBuf(i) = transfer([(inWordP(c:c),c=4*(i-1)+4,4*(i-1),-1)],int32)
+  end do
+  wBuf(nBuf:nBuf-1:-1) = transfer(wLen*8,int32,2)
 
 end subroutine sha256_init
+
+subroutine sha256_hash
+
+  integer             :: i,j
+  integer(kind=int32) :: a,b,c,d,e,f,g,h,t1,t2
+  integer(kind=int32) :: w(64)
+
+  do i=1,nBlock
+
+    a = hh(1)
+    b = hh(2)
+    c = hh(3)
+    d = hh(4)
+    e = hh(5)
+    f = hh(6)
+    g = hh(7)
+    h = hh(8)
+  
+    do j=1,16
+      w(j) = wBuf(16*(i - 1) + j)
+    end do
+    do j=17,64
+      w(j) = sigmaRRS1(w(j-2)) + w(j-7) + sigmaRRS0(w(j-15)) + w(j-16)
+    end do
+
+    do j=1,64
+      t1 = h + sigmaRRR1(e) + ch(e,f,g) + kk(j) + w(j)
+      t2 = sigmaRRR0(a) + maj(a,b,c)
+      h  = g
+      g  = f
+      f  = e
+      e  = d + t1
+      d  = c
+      c  = b
+      b  = a
+      a  = t1 + t2
+    end do
+
+    hh(1) = a + hh(1)
+    hh(2) = b + hh(2)
+    hh(3) = c + hh(3)
+    hh(4) = d + hh(4)
+    hh(5) = e + hh(5)
+    hh(6) = f + hh(6)
+    hh(7) = g + hh(7)
+    hh(8) = h + hh(8)
+
+  end do
+
+end subroutine sha256_hash
 
 subroutine sha256_digest(outWord)
   character(len=64), intent(out) :: outWord
@@ -92,25 +140,25 @@ end function maj
 ! RotR(X,2) XOR RotR(X,13) XOR RotR(X,22)
 pure integer function sigmaRRR0(x)
   integer, intent(in) :: x
-  sigmaRRR0 = ieor(ieor(ishftc(x,-2),ishftc(x,-13)),ishftc(x,-22))
+  sigmaRRR0 = ieor(ieor(dshiftr(x,x,2),dshiftr(x,x,13)),dshiftr(x,x,22))
 end function sigmaRRR0
 
 ! RotR(X,6) XOR RotR(X,11) XOR RotR(X,25)
 pure integer function sigmaRRR1(x)
   integer, intent(in) :: x
-  sigmaRRR1 = ieor(ieor(ishftc(x,-6),ishftc(x,-11)),ishftc(x,-25))
+  sigmaRRR1 = ieor(ieor(dshiftr(x,x,6),dshiftr(x,x,11)),dshiftr(x,x,25))
 end function sigmaRRR1
 
 ! RotR(X,7) XOR RotR(X,18) XOR ShR(X,3)
 pure integer function sigmaRRS0(x)
   integer, intent(in) :: x
-  sigmaRRS0 = ieor(ieor(ishftc(x,-7),ishftc(x,-18)),ishft(x,-3))
+  sigmaRRS0 = ieor(ieor(dshiftr(x,x,7),dshiftr(x,x,18)),shiftr(x,3))
 end function sigmaRRS0
 
 ! RotR(X,17) XOR RotR(X,19) XOR ShR(X,10)
 pure integer function sigmaRRS1(x)
   integer, intent(in) :: x
-  sigmaRRS1 = ieor(ieor(ishftc(x,-17),ishftc(x,-19)),ishft(x,-10))
+  sigmaRRS1 = ieor(ieor(dshiftr(x,x,17),dshiftr(x,x,19)),shiftr(x,10))
 end function sigmaRRS1
 
 end module mod_sha256
