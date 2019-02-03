@@ -71,7 +71,12 @@ subroutine sha256_init(inWord)
   ! Loop over all characters in the string in order 4,3,2,1,8,7,6,5,...
   !  and store them as int32 in little endian order
   do i=1,nBuf-2
-    wBuf(i) = transfer([(inWordP(c:c),c=4*(i-1)+4,4*(i-1),-1)],int32)
+    c = 4*(i-1)
+    fWord(1) = transfer(inWordP(c+4:c+4),int8)
+    fWord(2) = transfer(inWordP(c+3:c+3),int8)
+    fWord(3) = transfer(inWordP(c+2:c+2),int8)
+    fWord(4) = transfer(inWordP(c+1:c+1),int8)
+    wBuf(i)  = transfer(fWord(1:4),int8)
   end do
   ! Append the length as an int64 spanning 2 words at the end
   wBuf(nBuf:nBuf-1:-1) = transfer(wLen*8,int32,2)
