@@ -27,9 +27,9 @@ program main
     do j=1,num
       call sha256_init(trim(theMessage(i)))
       call sha256_hash
-      call sha256_digest(hashDigest)
     end do
     call cpu_time(tEnd)
+    call sha256_digest(hashDigest)
 
     if(hashDigest /= hashCorrect(i)) then
       write(*,"(a)") "SHA-256 Failed :("
