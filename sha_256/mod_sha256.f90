@@ -136,38 +136,38 @@ subroutine sha256_digest(outWord)
 end subroutine sha256_digest
 
 ! (X AND Y) XOR ((NOT X) AND Z)
-pure integer function ch(x,y,z)
-  integer, intent(in) :: x,y,z
+pure integer(kind=int32) function ch(x,y,z)
+  integer(kind=int32), intent(in) :: x,y,z
   ch = ieor(iand(x,y),iand(not(x),z))
 end function ch
 
 ! (X AND Y) XOR (X AND Z) XOR (Y AND Z)
-pure integer function maj(x,y,z)
-  integer, intent(in) :: x,y,z
+pure integer(kind=int32) function maj(x,y,z)
+  integer(kind=int32), intent(in) :: x,y,z
   maj = ieor(ieor(iand(x,y),iand(x,z)),iand(y,z))
 end function maj
 
 ! RotR(X,2) XOR RotR(X,13) XOR RotR(X,22)
-pure integer function sigmaRRR0(x)
-  integer, intent(in) :: x
+pure integer(kind=int32) function sigmaRRR0(x)
+  integer(kind=int32), intent(in) :: x
   sigmaRRR0 = ieor(ieor(dshiftr(x,x,2),dshiftr(x,x,13)),dshiftr(x,x,22))
 end function sigmaRRR0
 
 ! RotR(X,6) XOR RotR(X,11) XOR RotR(X,25)
-pure integer function sigmaRRR1(x)
-  integer, intent(in) :: x
+pure integer(kind=int32) function sigmaRRR1(x)
+  integer(kind=int32), intent(in) :: x
   sigmaRRR1 = ieor(ieor(dshiftr(x,x,6),dshiftr(x,x,11)),dshiftr(x,x,25))
 end function sigmaRRR1
 
 ! RotR(X,7) XOR RotR(X,18) XOR ShR(X,3)
-pure integer function sigmaRRS0(x)
-  integer, intent(in) :: x
+pure integer(kind=int32) function sigmaRRS0(x)
+  integer(kind=int32), intent(in) :: x
   sigmaRRS0 = ieor(ieor(dshiftr(x,x,7),dshiftr(x,x,18)),shiftr(x,3))
 end function sigmaRRS0
 
 ! RotR(X,17) XOR RotR(X,19) XOR ShR(X,10)
-pure integer function sigmaRRS1(x)
-  integer, intent(in) :: x
+pure integer(kind=int32) function sigmaRRS1(x)
+  integer(kind=int32), intent(in) :: x
   sigmaRRS1 = ieor(ieor(dshiftr(x,x,17),dshiftr(x,x,19)),shiftr(x,10))
 end function sigmaRRS1
 
