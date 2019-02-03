@@ -19,6 +19,6 @@ It has worked well for what I've used it for, but it doesn't really give many be
 
 ### SHA-256
 
-This is my current project.
-I already implemented MD5 hashing in a Fortran code by writing an interface to the ols c code by its original author.
-Reading up on the SHA-2 hash algorithm, I was wondering if I could do it natively in Fortran, so I decided to try with the 256 bit version.
+The SHA-256 module implements the 256 bit SHA-2 digest algorithm in Fortran 2008.
+It probably only works on little endian machines.
+The bash script `buildNTest.sh` will build a small test executable and run 4 test hashes.

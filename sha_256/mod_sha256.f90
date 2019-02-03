@@ -38,7 +38,8 @@ subroutine sha256_init(inWord)
 
   if(allocated(wBuf)) deallocate(wBuf)
 
-  ! Initialise hh()
+  ! Initialise hh() with the fractional part
+  !  of the square root of the first 8 prime numbers
   hh(1) = transfer(z'6a09e667',int32)
   hh(2) = transfer(z'bb67ae85',int32)
   hh(3) = transfer(z'3c6ef372',int32)
@@ -48,6 +49,8 @@ subroutine sha256_init(inWord)
   hh(7) = transfer(z'1f83d9ab',int32)
   hh(8) = transfer(z'5be0cd19',int32)
 
+  ! Calculate padding needed until the message is
+  !  (length+1)%512 = 448 bit
   wLen = len(inWord)
   wMod = mod(wLen+1,64)
   if(wMod > 56) then
@@ -56,16 +59,21 @@ subroutine sha256_init(inWord)
     wPad = 56-wMod
   end if
 
+  ! Count the number of 512 bit blocks and
+  !  allocate the buffer of 32 bit words
   nBlock = (wLen+wPad+9)/64
   nBuf   = nBlock * 16
   allocate(wBuf(nBuf))
 
+  ! Add the padding of a single 1 and rest 0
   inWordP = inWord//char(128)//repeat(char(0),wPad)
 
   ! Loop over all characters in the string in order 4,3,2,1,8,7,6,5,...
+  !  and store them as int32 in little endian order
   do i=1,nBuf-2
     wBuf(i) = transfer([(inWordP(c:c),c=4*(i-1)+4,4*(i-1),-1)],int32)
   end do
+  ! Append the length as an int64 spanning 2 words at the end
   wBuf(nBuf:nBuf-1:-1) = transfer(wLen*8,int32,2)
 
 end subroutine sha256_init
@@ -76,8 +84,9 @@ subroutine sha256_hash
   integer(kind=int32) :: a,b,c,d,e,f,g,h,t1,t2
   integer(kind=int32) :: w(64)
 
-  do i=1,nBlock
+  do i=1,nBlock ! Loop over blocks
 
+    ! Initialise the block digest variables
     a = hh(1)
     b = hh(2)
     c = hh(3)
@@ -87,14 +96,14 @@ subroutine sha256_hash
     g = hh(7)
     h = hh(8)
   
-    do j=1,16
+    do j=1,16 ! Read the 16 words in the current block
       w(j) = wBuf(16*(i - 1) + j)
     end do
-    do j=17,64
+    do j=17,64 ! Compute the remaining 48 words from the first 16
       w(j) = sigmaRRS1(w(j-2)) + w(j-7) + sigmaRRS0(w(j-15)) + w(j-16)
     end do
 
-    do j=1,64
+    do j=1,64 ! Digest the 64 words
       t1 = h + sigmaRRR1(e) + ch(e,f,g) + kk(j) + w(j)
       t2 = sigmaRRR0(a) + maj(a,b,c)
       h  = g
@@ -107,6 +116,7 @@ subroutine sha256_hash
       a  = t1 + t2
     end do
 
+    ! Add the results for this block to the message digest
     hh(1) = a + hh(1)
     hh(2) = b + hh(2)
     hh(3) = c + hh(3)
