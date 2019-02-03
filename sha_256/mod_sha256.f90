@@ -1,6 +1,6 @@
 module mod_sha256
 
-  use, intrinsic :: iso_fortran_env, only : int8, int32, int64
+  use, intrinsic :: iso_fortran_env, only : int8, int32, int64, real64
 
   implicit none
 
@@ -49,6 +49,16 @@ subroutine sha256_init(inWord)
   hh(7) = transfer(z'1f83d9ab',int32)
   hh(8) = transfer(z'5be0cd19',int32)
 
+  ! Which is equivalent to doing this:
+  ! hh(1) = transfer(shiftr(transfer(sqrt( 2.0_real64),   1_int64),20), 1_int32)
+  ! hh(2) = transfer(shiftr(transfer(sqrt( 3.0_real64),   1_int64),20), 1_int32)
+  ! hh(3) = transfer(shiftr(transfer(sqrt( 5.0_real64)-1, 1_int64),20), 1_int32)
+  ! hh(4) = transfer(shiftr(transfer(sqrt( 7.0_real64)-1, 1_int64),20), 1_int32)
+  ! hh(5) = transfer(shiftr(transfer(sqrt(11.0_real64)-2, 1_int64),20), 1_int32)
+  ! hh(6) = transfer(shiftr(transfer(sqrt(13.0_real64)-2, 1_int64),20), 1_int32)
+  ! hh(7) = transfer(shiftr(transfer(sqrt(17.0_real64)-3, 1_int64),20), 1_int32)
+  ! hh(8) = transfer(shiftr(transfer(sqrt(19.0_real64)-3, 1_int64),20), 1_int32)
+
   ! Calculate padding needed until the message is
   !  (length+1)%512 = 448 bit
   wLen = len(inWord)
@@ -72,10 +82,10 @@ subroutine sha256_init(inWord)
   !  and store them as int32 in little endian order
   do i=1,nBuf-2
     c = 4*(i-1)
-    fWord(1) = transfer(inWordP(c+4:c+4),int8)
-    fWord(2) = transfer(inWordP(c+3:c+3),int8)
-    fWord(3) = transfer(inWordP(c+2:c+2),int8)
-    fWord(4) = transfer(inWordP(c+1:c+1),int8)
+    fWord(1) = transfer(inWordP(c+4:c+4),1_int8)
+    fWord(2) = transfer(inWordP(c+3:c+3),1_int8)
+    fWord(3) = transfer(inWordP(c+2:c+2),1_int8)
+    fWord(4) = transfer(inWordP(c+1:c+1),1_int8)
     wBuf(i)  = transfer(fWord(1:4),int8)
   end do
   ! Append the length as an int64 spanning 2 words at the end
