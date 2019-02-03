@@ -81,21 +81,14 @@ end subroutine sha256_init
 subroutine sha256_hash
 
   integer             :: i,j
-  integer(kind=int32) :: a,b,c,d,e,f,g,h,t1,t2
+  integer(kind=int32) :: h(8),t1,t2
   integer(kind=int32) :: w(64)
 
   do i=1,nBlock ! Loop over blocks
 
     ! Initialise the block digest variables
-    a = hh(1)
-    b = hh(2)
-    c = hh(3)
-    d = hh(4)
-    e = hh(5)
-    f = hh(6)
-    g = hh(7)
-    h = hh(8)
-  
+    h = hh
+
     do j=1,16 ! Read the 16 words in the current block
       w(j) = wBuf(16*(i - 1) + j)
     end do
@@ -104,27 +97,15 @@ subroutine sha256_hash
     end do
 
     do j=1,64 ! Digest the 64 words
-      t1 = h + sigmaRRR1(e) + ch(e,f,g) + kk(j) + w(j)
-      t2 = sigmaRRR0(a) + maj(a,b,c)
-      h  = g
-      g  = f
-      f  = e
-      e  = d + t1
-      d  = c
-      c  = b
-      b  = a
-      a  = t1 + t2
+      t1     = h(8) + sigmaRRR1(h(5)) + ch(h(5),h(6),h(7)) + kk(j) + w(j)
+      t2     = sigmaRRR0(h(1)) + maj(h(1),h(2),h(3))
+      h(2:8) = h(1:7)    ! Shift all the values
+      h(5)   = h(5) + t1 ! Add the new word
+      h(1)   = t1 + t2   ! Add the new word
     end do
 
     ! Add the results for this block to the message digest
-    hh(1) = a + hh(1)
-    hh(2) = b + hh(2)
-    hh(3) = c + hh(3)
-    hh(4) = d + hh(4)
-    hh(5) = e + hh(5)
-    hh(6) = f + hh(6)
-    hh(7) = g + hh(7)
-    hh(8) = h + hh(8)
+    hh = h + hh
 
   end do
 
@@ -136,37 +117,37 @@ subroutine sha256_digest(outWord)
 end subroutine sha256_digest
 
 ! (X AND Y) XOR ((NOT X) AND Z)
-pure integer(kind=int32) function ch(x,y,z)
+pure elemental integer(kind=int32) function ch(x,y,z)
   integer(kind=int32), intent(in) :: x,y,z
   ch = ieor(iand(x,y),iand(not(x),z))
 end function ch
 
 ! (X AND Y) XOR (X AND Z) XOR (Y AND Z)
-pure integer(kind=int32) function maj(x,y,z)
+pure elemental integer(kind=int32) function maj(x,y,z)
   integer(kind=int32), intent(in) :: x,y,z
   maj = ieor(ieor(iand(x,y),iand(x,z)),iand(y,z))
 end function maj
 
 ! RotR(X,2) XOR RotR(X,13) XOR RotR(X,22)
-pure integer(kind=int32) function sigmaRRR0(x)
+pure elemental integer(kind=int32) function sigmaRRR0(x)
   integer(kind=int32), intent(in) :: x
   sigmaRRR0 = ieor(ieor(dshiftr(x,x,2),dshiftr(x,x,13)),dshiftr(x,x,22))
 end function sigmaRRR0
 
 ! RotR(X,6) XOR RotR(X,11) XOR RotR(X,25)
-pure integer(kind=int32) function sigmaRRR1(x)
+pure elemental integer(kind=int32) function sigmaRRR1(x)
   integer(kind=int32), intent(in) :: x
   sigmaRRR1 = ieor(ieor(dshiftr(x,x,6),dshiftr(x,x,11)),dshiftr(x,x,25))
 end function sigmaRRR1
 
 ! RotR(X,7) XOR RotR(X,18) XOR ShR(X,3)
-pure integer(kind=int32) function sigmaRRS0(x)
+pure elemental integer(kind=int32) function sigmaRRS0(x)
   integer(kind=int32), intent(in) :: x
   sigmaRRS0 = ieor(ieor(dshiftr(x,x,7),dshiftr(x,x,18)),shiftr(x,3))
 end function sigmaRRS0
 
 ! RotR(X,17) XOR RotR(X,19) XOR ShR(X,10)
-pure integer(kind=int32) function sigmaRRS1(x)
+pure elemental integer(kind=int32) function sigmaRRS1(x)
   integer(kind=int32), intent(in) :: x
   sigmaRRS1 = ieor(ieor(dshiftr(x,x,17),dshiftr(x,x,19)),shiftr(x,10))
 end function sigmaRRS1

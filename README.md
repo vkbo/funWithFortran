@@ -22,3 +22,5 @@ It has worked well for what I've used it for, but it doesn't really give many be
 The SHA-256 module implements the 256 bit SHA-2 digest algorithm in Fortran 2008.
 It probably only works on little endian machines.
 The bash script `buildNTest.sh` will build a small test executable and run 4 test hashes.
+The bash script `buildNPerfTest.sh` will build a small test executable and run the lorem ipsum digest 1 million times.
+This takes 9.8 seconds on my Intel i7-7700K CPU.
