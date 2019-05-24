@@ -5,22 +5,14 @@ module mod_sha256
   implicit none
 
   integer(kind=int32), parameter :: kk(64) = (/ &
-    transfer(z'428a2f98',int32),transfer(z'71374491',int32),transfer(z'b5c0fbcf',int32),transfer(z'e9b5dba5',int32), &
-    transfer(z'3956c25b',int32),transfer(z'59f111f1',int32),transfer(z'923f82a4',int32),transfer(z'ab1c5ed5',int32), &
-    transfer(z'd807aa98',int32),transfer(z'12835b01',int32),transfer(z'243185be',int32),transfer(z'550c7dc3',int32), &
-    transfer(z'72be5d74',int32),transfer(z'80deb1fe',int32),transfer(z'9bdc06a7',int32),transfer(z'c19bf174',int32), &
-    transfer(z'e49b69c1',int32),transfer(z'efbe4786',int32),transfer(z'0fc19dc6',int32),transfer(z'240ca1cc',int32), &
-    transfer(z'2de92c6f',int32),transfer(z'4a7484aa',int32),transfer(z'5cb0a9dc',int32),transfer(z'76f988da',int32), &
-    transfer(z'983e5152',int32),transfer(z'a831c66d',int32),transfer(z'b00327c8',int32),transfer(z'bf597fc7',int32), &
-    transfer(z'c6e00bf3',int32),transfer(z'd5a79147',int32),transfer(z'06ca6351',int32),transfer(z'14292967',int32), &
-    transfer(z'27b70a85',int32),transfer(z'2e1b2138',int32),transfer(z'4d2c6dfc',int32),transfer(z'53380d13',int32), &
-    transfer(z'650a7354',int32),transfer(z'766a0abb',int32),transfer(z'81c2c92e',int32),transfer(z'92722c85',int32), &
-    transfer(z'a2bfe8a1',int32),transfer(z'a81a664b',int32),transfer(z'c24b8b70',int32),transfer(z'c76c51a3',int32), &
-    transfer(z'd192e819',int32),transfer(z'd6990624',int32),transfer(z'f40e3585',int32),transfer(z'106aa070',int32), &
-    transfer(z'19a4c116',int32),transfer(z'1e376c08',int32),transfer(z'2748774c',int32),transfer(z'34b0bcb5',int32), &
-    transfer(z'391c0cb3',int32),transfer(z'4ed8aa4a',int32),transfer(z'5b9cca4f',int32),transfer(z'682e6ff3',int32), &
-    transfer(z'748f82ee',int32),transfer(z'78a5636f',int32),transfer(z'84c87814',int32),transfer(z'8cc70208',int32), &
-    transfer(z'90befffa',int32),transfer(z'a4506ceb',int32),transfer(z'bef9a3f7',int32),transfer(z'c67178f2',int32) /)
+     1116352408,  1899447441, -1245643825,  -373957723,   961987163,  1508970993, -1841331548, -1424204075, &
+     -670586216,   310598401,   607225278,  1426881987,  1925078388, -2132889090, -1680079193, -1046744716, &
+     -459576895,  -272742522,   264347078,   604807628,   770255983,  1249150122,  1555081692,  1996064986, &
+    -1740746414, -1473132947, -1341970488, -1084653625,  -958395405,  -710438585,   113926993,   338241895, &
+      666307205,   773529912,  1294757372,  1396182291,  1695183700,  1986661051, -2117940946, -1838011259, &
+    -1564481375, -1474664885, -1035236496,  -949202525,  -778901479,  -694614492,  -200395387,   275423344, &
+      430227734,   506948616,   659060556,   883997877,   958139571,  1322822218,  1537002063,  1747873779, &
+     1955562222,  2024104815, -2067236844, -1933114872, -1866530822, -1538233109, -1090935817,  -965641998 /)
 
   integer(kind=int32),              public,  save :: hh(8)
   integer(kind=int32), allocatable, private, save :: wBuf(:)
@@ -40,14 +32,9 @@ subroutine sha256_init(inWord)
 
   ! Initialise hh() with the fractional part
   !  of the square root of the first 8 prime numbers
-  hh(1) = transfer(z'6a09e667',int32)
-  hh(2) = transfer(z'bb67ae85',int32)
-  hh(3) = transfer(z'3c6ef372',int32)
-  hh(4) = transfer(z'a54ff53a',int32)
-  hh(5) = transfer(z'510e527f',int32)
-  hh(6) = transfer(z'9b05688c',int32)
-  hh(7) = transfer(z'1f83d9ab',int32)
-  hh(8) = transfer(z'5be0cd19',int32)
+  hh = [ &
+    1779033703,-1150833019,1013904242,-1521486534, &
+    1359893119,-1694144372, 528734635, 1541459225  ]
 
   ! Which is equivalent to doing this:
   ! hh(1) = transfer(shiftr(transfer(sqrt( 2.0_real64),   1_int64),20), 1_int32)
